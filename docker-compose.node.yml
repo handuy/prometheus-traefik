@@ -1,0 +1,33 @@
+version: '3.7'
+
+services:
+  db:
+    image: postgres
+    networks:
+      - prometheus
+    volumes:
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+      - dbdata:/var/lib/postgresql/data
+    environment: 
+      - POSTGRES_PASSWORD=postgres
+
+  node:
+    depends_on:
+      - db
+    image: handuy1992/node-todo
+    networks:
+      - prometheus
+    deploy:
+      labels:
+        - traefik.port=8080
+        - traefik.backend=node
+        - traefik.frontend.rule=Host:node.localhost
+        - "traefik.enable=true"
+        - "traefik.docker.network=prometheus" 
+
+volumes:
+  dbdata:
+
+networks:
+  prometheus:
+    external: true
